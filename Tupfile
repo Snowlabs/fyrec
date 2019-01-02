@@ -1,0 +1,13 @@
+CXX=clang++
+CXXFLAGS+=-Wall -Werror -Wpedantic -std=c++17
+CXXFLAGS+=-g -O0
+CXXFLAGS+=-I src
+
+!cxx = |> $(CXX) $(CXXFLAGS) -c %f -o %o |>
+
+
+: foreach src/*.cpp        |> !cxx |> build/%B.o        {objs}
+: foreach src/fyre/*.cpp   |> !cxx |> build/fyre/%B.o   {objs}
+: foreach src/parser/*.cpp |> !cxx |> build/parser/%B.o {objs}
+
+: {objs} |> $(CXX) $(CXXFLAGS) %f -o %o |> fyrec
