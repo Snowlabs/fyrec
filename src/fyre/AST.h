@@ -10,8 +10,21 @@
 #include <parser/parser.h>
 
 namespace Fyre {
-  class ANode;
-  typedef std::shared_ptr<ANode> ANodeP;
+
+  // I know this isnt pretty, but cpp is too verbose
+#define decl_ptr(Typ) \
+  class Typ;          \
+  using Typ##Ptr = std::shared_ptr<Typ>;
+
+  decl_ptr(ANode);
+  decl_ptr(Ident);
+  decl_ptr(Type);
+  decl_ptr(Expr);
+  decl_ptr(IntLit);
+  decl_ptr(FunDec);
+  decl_ptr(FunDef);
+
+#undef decl_ptr
 
   // template<class T>
   // struct ParsableAST {
@@ -53,7 +66,7 @@ namespace Fyre {
 
     std::string to_string() const;
 
-    static ANodeP parse(Parser::IParseStream &);
+    static IdentPtr parse(Parser::IParseStream &);
     // using PTrait = Parser::ParsableTrait<ParsableAST<Ident>>;
     // static const Parser::Parser<ANodeP> parser;
 
@@ -63,24 +76,24 @@ namespace Fyre {
 
   class Type : public ANode {
   public:
-    Type(std::string type, std::vector<ANodeP> args = {});
+    Type(std::string type, std::vector<TypePtr> args = {});
 
     std::string to_string() const;
 
-    static ANodeP parse(Parser::IParseStream &);
+    static TypePtr parse(Parser::IParseStream &);
     // using PTrait = Parser::ParsableTrait<ParsableAST<Type>>;
     // static const Parser::Parser<ANodeP> parser;
 
   protected:
     std::string m_str;
-    std::vector<ANodeP> m_args;
+    std::vector<TypePtr> m_args;
   };
 
   class Expr : public ANode {
   public:
     // std::string to_string() const;
 
-    static ANodeP parse(Parser::IParseStream &);
+    static ExprPtr parse(Parser::IParseStream &);
     // using PTrait = Parser::ParsableTrait<ParsableAST<Expr>>;
     // static const Parser::Parser<ANodeP> parser;
   };
@@ -90,7 +103,7 @@ namespace Fyre {
     IntLit(long long int val = 0);
     std::string to_string() const;
 
-    static ANodeP parse(Parser::IParseStream &);
+    static IntLitPtr parse(Parser::IParseStream &);
     // using PTrait = Parser::ParsableTrait<ParsableAST<Expr>>;
     // static const Parser::Parser<ANodeP> parser;
 
@@ -101,58 +114,63 @@ namespace Fyre {
   class FunDec : public ANode {
   public:
     struct Arg {
-      std::optional<ANodeP> name;
-      ANodeP type;
+      std::optional<IdentPtr> name;
+      TypePtr type;
     };
 
-    FunDec(ANodeP name, std::vector<Arg> args,
-           ANodeP type, std::optional<ANodeP> context = std::nullopt);
+    // TODO: implement contexts
+    FunDec(IdentPtr name, std::vector<Arg> args,
+           TypePtr  type, std::optional<TypePtr> context = std::nullopt);
 
     std::string to_string() const;
 
-    static ANodeP parse(Parser::IParseStream &);
+    static FunDecPtr parse(Parser::IParseStream &);
     // using PTrait = Parser::ParsableTrait<ParsableAST<FunDec>>;
     // static const Parser::Parser<ANodeP> parser;
 
   protected:
-    ANodeP m_name;
+    IdentPtr m_name;
     std::vector<Arg> m_args;
-    ANodeP m_type;
-    std::optional<ANodeP> m_context;
+    TypePtr m_type;
+    std::optional<TypePtr> m_context;
   };
   std::ostream &operator<<(std::ostream &os, FunDec::Arg const &arg);
 
   class FunDef : public ANode {
   public:
     struct Arg {
-      ANodeP name;
-      std::optional<ANodeP> type;
+      IdentPtr name;
+      std::optional<TypePtr> type;
     };
 
     // FunDef(ANodeP name, std::vector<Arg> args,
     //        ANodeP type,
     //        ANodeP expr);
-    FunDef(ANodeP name, std::vector<Arg> args,
-           ANodeP type, std::optional<ANodeP> context,
-           ANodeP expr);
+    FunDef(IdentPtr name, std::vector<Arg> args,
+           TypePtr  type, std::optional<TypePtr> context,
+           ExprPtr  expr);
 
     std::string to_string() const;
 
-    static ANodeP parse(Parser::IParseStream &);
+    static FunDefPtr parse(Parser::IParseStream &);
     // using PTrait = Parser::ParsableTrait<ParsableAST<FunDec>>;
     // static const Parser::Parser<ANodeP> parser;
 
   protected:
-    ANodeP m_name;
+    IdentPtr m_name;
     std::vector<Arg> m_args;
-    ANodeP m_type;
-    std::optional<ANodeP> m_context;
-    ANodeP m_expr;
+    TypePtr m_type;
+    std::optional<TypePtr> m_context;
+    ExprPtr m_expr;
   };
   std::ostream &operator<<(std::ostream &os, FunDec::Arg const &arg);
 
   std::ostream &operator<<(std::ostream &os, ANode const &id);
-  std::ostream &operator<<(std::ostream &os, ANodeP const &id);
+
+  template<class T>
+  std::ostream &operator<<(std::ostream &os, std::shared_ptr<T> const &id) {
+    return os << *static_cast<ANodePtr>(id);
+  }
 
 }
 #endif

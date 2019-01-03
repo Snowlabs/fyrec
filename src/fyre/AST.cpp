@@ -7,15 +7,12 @@ namespace Fyre {
     return os << id.to_string();
   }
 
-  std::ostream &operator<<(std::ostream &os, ANodeP const &id) {
-    return os << id->to_string();
-  }
 
   Ident::Ident(std::string ident) : m_str(ident) {}
 
   std::string Ident::to_string() const { return m_str; }
 
-  Type::Type(std::string type, std::vector<ANodeP> args)
+  Type::Type(std::string type, std::vector<TypePtr> args)
     : m_str(type), m_args(args) {}
 
   std::string Type::to_string() const {
@@ -33,8 +30,8 @@ namespace Fyre {
     return std::to_string(m_val);
   }
 
-  FunDec::FunDec(ANodeP name, std::vector<Arg> args,
-                 ANodeP type, std::optional<ANodeP> context)
+  FunDec::FunDec(IdentPtr name, std::vector<Arg> args,
+                 TypePtr type, std::optional<TypePtr> context)
     : m_name(name), m_args(args),
       m_type(type), m_context(context) {}
 
@@ -67,9 +64,9 @@ namespace Fyre {
     return r.str();
   }
 
-  FunDef::FunDef(ANodeP name, std::vector<Arg> args,
-                 ANodeP type, std::optional<ANodeP> context,
-                 ANodeP expr)
+  FunDef::FunDef(IdentPtr name, std::vector<Arg> args,
+                 TypePtr type, std::optional<TypePtr> context,
+                 ExprPtr expr)
     : m_name(name), m_args(args),
       m_type(type), m_context(context),
       m_expr(expr) {}

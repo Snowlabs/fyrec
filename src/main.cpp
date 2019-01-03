@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 
   try {
     while(1) {
-      Fyre::ANodeP ast = in.one_of<Fyre::FunDef>();
+      Fyre::ANodePtr ast = in.one_of<Fyre::FunDef>();
 
       in.begin_token();
       in.one_of({';'});

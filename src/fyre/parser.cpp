@@ -101,7 +101,7 @@ namespace Fyre {
     };
 
     struct TypeNoArgs {
-      static ANodeP parse(Parser::IParseStream &in) {
+      static TypePtr parse(Parser::IParseStream &in) {
         auto id = in.one_of<ExtraParsers::TypeIdent>();
 
         return make_shared<Type>(id);
@@ -109,7 +109,7 @@ namespace Fyre {
     };
 
     struct TypeArg {
-      static ANodeP parse(Parser::IParseStream &in) {
+      static TypePtr parse(Parser::IParseStream &in) {
         in.begin_token();
         in.one_of({'.'});
 
@@ -122,8 +122,8 @@ namespace Fyre {
     struct FunDecArg {
       static FunDec::Arg parse(Parser::IParseStream &in) {
 
-        auto   name = in.maybe_of<Ident>();
-        ANodeP type = in.one_of<Type>();
+        auto name = in.maybe_of<Ident>();
+        auto type = in.one_of<Type>();
 
         return { name, type };
       }
@@ -132,15 +132,15 @@ namespace Fyre {
     struct FunDefArg {
       static FunDef::Arg parse(Parser::IParseStream &in) {
 
-        ANodeP name = in.one_of<Ident>();
-        auto   type = in.maybe_of<Type>();
+        auto name = in.one_of<Ident>();
+        auto type = in.maybe_of<Type>();
 
         return { name, type };
       }
     };
   }
 
-  ANodeP Ident::parse(Parser::IParseStream &in) {
+  IdentPtr Ident::parse(Parser::IParseStream &in) {
     std::stringstream r;
 
     in.begin_token();
@@ -151,7 +151,7 @@ namespace Fyre {
     return make_shared<Ident>(r.str());
   }
 
-  ANodeP Type::parse(Parser::IParseStream &in) {
+  TypePtr Type::parse(Parser::IParseStream &in) {
     std::stringstream r;
 
     in.begin_token();
@@ -159,17 +159,17 @@ namespace Fyre {
     // r << ExtraParsers::TypeIdent>::parse(in);
     r << in.one_of<ExtraParsers::TypeIdent>();
 
-    std::vector<ANodeP> args =
+    std::vector<TypePtr> args =
       in.many_of<ExtraParsers::TypeArg>();
 
     return make_shared<Type>(r.str(), args);
   }
 
-  ANodeP Expr::parse(Parser::IParseStream &in) {
+  ExprPtr Expr::parse(Parser::IParseStream &in) {
     return in.one_of<IntLit>();
   }
 
-  ANodeP IntLit::parse(Parser::IParseStream &in) {
+  IntLitPtr IntLit::parse(Parser::IParseStream &in) {
     std::stringstream r;
     in.begin_token();
 
@@ -180,7 +180,7 @@ namespace Fyre {
     return make_shared<IntLit>(v);
   }
 
-  ANodeP FunDec::parse(Parser::IParseStream &in) {
+  FunDecPtr FunDec::parse(Parser::IParseStream &in) {
     using namespace ExtraParsers;
 
     auto id   = in.one_of<Ident>();
@@ -192,7 +192,7 @@ namespace Fyre {
     return make_shared<FunDec>(id, args, type);
   }
 
-  ANodeP FunDef::parse(Parser::IParseStream &in) {
+  FunDefPtr FunDef::parse(Parser::IParseStream &in) {
     using namespace ExtraParsers;
 
     auto id   = in.one_of<Ident>();
@@ -207,10 +207,6 @@ namespace Fyre {
     auto expr = in.one_of<Expr>();
 
     return make_shared<FunDef>(id, args, type, std::nullopt, expr);
-  }
-
-  std::vector<ANodeP> parse_idents(Parser::IParseStream &in) {
-    return in.many_of<Ident>();
   }
 
 }
