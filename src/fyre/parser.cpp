@@ -138,6 +138,15 @@ namespace Fyre {
         return { name, type };
       }
     };
+
+    struct FunCalArg {
+      static FunCal::Arg parse(Parser::IParseStream &in) {
+
+        auto name = in.one_of<Expr>();
+
+        return name;
+      }
+    };
   }
 
   IdentPtr Ident::parse(Parser::IParseStream &in) {
@@ -166,7 +175,10 @@ namespace Fyre {
   }
 
   ExprPtr Expr::parse(Parser::IParseStream &in) {
-    return in.one_of<IntLit>();
+
+    return in.one_of_as<ExprPtr, FunCal, Var, IntLit>();
+
+    // return in.one_of<FunCal, IntLit>();
   }
 
   IntLitPtr IntLit::parse(Parser::IParseStream &in) {
@@ -178,6 +190,12 @@ namespace Fyre {
 
     long long int v = std::stoi(r.str());
     return make_shared<IntLit>(v);
+  }
+
+  VarPtr Var::parse(Parser::IParseStream &in) {
+    auto id = in.one_of<Ident>();
+
+    return make_shared<Var>(id);
   }
 
   FunDecPtr FunDec::parse(Parser::IParseStream &in) {
@@ -207,6 +225,43 @@ namespace Fyre {
     auto expr = in.one_of<Expr>();
 
     return make_shared<FunDef>(id, args, type, std::nullopt, expr);
+  }
+
+  FunCalPtr FunCal::parse(Parser::IParseStream &in) {
+    using namespace ExtraParsers;
+
+    auto id   = in.one_of<Ident>();
+    auto args = in.one_of<Parens<SepBy<FunCalArg, SComma>>>();
+
+    return make_shared<FunCal>(id, args);
+  }
+
+  TopLvlPtr TopLvl::parse(Parser::IParseStream &in) {
+    return in.one_of_as<TopLvlPtr, FunDef, FunDec>();
+  }
+
+  ModulePtr Module::parse(Parser::IParseStream &in) {
+    std::vector<TopLvlPtr> r;
+
+    in.skip_ws();
+    while (in.peek() != EOF) {
+      try {
+
+        r.push_back(in.one_of<TopLvl>());
+
+      } catch (Parser::Error e) {
+
+        in.skip_ws();
+
+        if(!in.maybe_of({';'}))
+          throw e;
+
+        in.skip_ws();
+      }
+
+    }
+
+    return make_shared<Module>(r);
   }
 
 }

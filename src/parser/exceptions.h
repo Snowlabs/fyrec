@@ -1,5 +1,5 @@
-#ifndef EXCEPTIONS_H
-#define EXCEPTIONS_H
+#ifndef PARSER_EXCEPTIONS_H
+#define PARSER_EXCEPTIONS_H
 
 #include <exception>
 #include <string>

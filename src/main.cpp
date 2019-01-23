@@ -5,6 +5,7 @@
 
 #include "fyre/AST.h"
 #include "fyre/parser.h"
+#include "fyre/context.h"
 
 #include "parser/parser.h"
 #include "parser/exceptions.h"
@@ -76,21 +77,26 @@ int main(int argc, char **argv) {
   // test_loc();
 
   Parser::IParseStream in(std::cin);
+  // llvm::LLVMContext lctx;
+  // llvm::IRBuilder<> builder(lctx);
+  // llvm::Module module("fyrec-jit", lctx);
+  // Fyre::Context ctx(lctx, builder, module);
 
+  Fyre::ModulePtr module;
   try {
-    while(1) {
-      Fyre::ANodePtr ast = in.one_of<Fyre::FunDef>();
-
-      in.begin_token();
-      in.one_of({';'});
-
-      std::cout << "fundef: " << ast << std::endl;
-    }
+    module = in.one_of<Fyre::Module>();
 
   } catch (Parser::Error &e) {
     std::cerr << "Parser error: " << e.what() << std::endl;
   }
 
+  std::cout << module
+            << "\n"
+            << std::endl;
+
+
+  module->codegen("main")->module().print(llvm::outs(), nullptr);
+  std::cout << std::endl;
 
 
 }

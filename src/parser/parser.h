@@ -10,6 +10,7 @@
 #include <variant>
 #include <initializer_list>
 #include <type_traits>
+#include <memory>
 
 #include "location.h"
 #include "exceptions.h"
@@ -168,9 +169,8 @@ namespace Parser {
 
     char one_of(const CharSet &set);
 
-    template<class ParsableTr>
-    // Parsable try_parse(const Parser<Parsable> p) {
-    typename ParsableTrait<ParsableTr>::ResultType one_of() {
+    template<class R, class ParsableTr>
+    R one_of_as() {
       auto pos = tellg();
       try {
         return ParsableTrait<ParsableTr>::parser.parse(*this);
@@ -178,35 +178,50 @@ namespace Parser {
       } catch (Error e) {
         seekg(pos);
 
+        /* TODO: this should be the combination of 
+           all the failed parses to get to here */
         throw e;
       }
     }
 
-    template<class ParsableTr, class ParsableTr1, class ...Rest>
-    typename ParsableTrait<ParsableTr>::ResultType one_of() {
-      auto pos = tellg();
+    template<class R, class ParsableTr, class ParsableTr1, class ...Rest>
+    R one_of_as() {
       try {
-        return ParsableTrait<ParsableTr>::parser.parse(*this);
-
+        return one_of_as<R, ParsableTr>();
       } catch (Error e) {
-        seekg(pos);
-
-        return one_of<ParsableTr1, Rest...>();
-        // throw e;
+        return one_of_as<R, ParsableTr1, Rest...>();
       }
-      // return p.try_parse(*this);
     }
+
+
+    // FIXME: a call like one_of<DerA*, DerB*>() should give Base*
+    template<class ...ParsableTrs>
+    auto one_of() {
+      using R = std::common_type_t<
+        typename ParsableTrait<ParsableTrs>::ResultType...>;
+
+      return one_of_as<R, ParsableTrs...>();
+    }
+
 
 
     std::optional<char> maybe_of(const CharSet &set);
 
-    template<class ParsableTr, class ...ParsableTrs>
-    std::optional<typename ParsableTrait<ParsableTr>::ResultType> maybe_of() {
+    template<class R, class ...ParsableTrs>
+    std::optional<R> maybe_of_as() {
       try {
-        return one_of<ParsableTr, ParsableTrs...>();
+        return one_of_as<R, ParsableTrs...>();
       } catch (Error) {
         return std::nullopt;
       }
+    }
+
+    template<class ...ParsableTrs>
+    auto maybe_of() {
+      using R = std::common_type_t<
+        typename ParsableTrait<ParsableTrs>::ResultType...>;
+
+      return maybe_of_as<R, ParsableTrs...>();
     }
 
 

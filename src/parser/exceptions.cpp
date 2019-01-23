@@ -18,8 +18,6 @@ namespace Parser {
     return r;
   }
 
-  //TODO: make an error that says not only what expected but what got
-
   Error::Error(std::optional<Location>   loc,
                            std::optional<std::string> msg) : m_loc(loc) {
     std::ostringstream r;
